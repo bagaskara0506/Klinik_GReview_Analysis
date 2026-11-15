@@ -1,0 +1,21 @@
+Kita akan buat project baru untuk melihat sentiment google review layanan fasilitas Kesehatan klinik kita 1 & 2 untuk menangkap hal berikut :
+
+1. Daftar rata rata bintang yang di berikan
+2. Daftar masing masing bintang yang di berikan
+3. Daftar ulasan di filter berdasarkan bintang 
+4. Daftar jumlah masing masing bintang yang di berikan
+5. daftar ulasan paling sering muncul
+6. daftar ulasan negative berdasarkan referensi yang sudah saya berikan
+7. daftar ulasan positive berdasarkan referensi yang sudah saya berikan
+
+Analisa lainnya yang bisa kita tambahkan di daftar tolong kamu tambahkan yang sesuai dengan tujuan kita,
+
+untuk file negative.txt dan positive.txt tolong kamu review dan tambahkan jika ada yang perlu ditambahkan dan perlu di sesuaikan,
+
+Pola Analisa -+ sama dengan projek kita sebelumnya yaitu "Panduan Belajar Data Analyst" tetapi dengan urutan pertama kita scrapper datanya dahulu dan di bersihkan dan buat dalam bentuk csv, lalu kita uji coba langsung proses di looker studio, jika sudah oke baru kita alihkan ke neon bedanya ini tidak kita jalankan otomatis scrappernya tetapi kita proses manual jika memang di perlukan pembaharuan, baru nanti di sambungkan ke looker studio dengan extra data,
+
+Scraper akan terus bergulir sampai habis dan jika belum habis terus gulir dan pastikan data saat di gulir sudah tampil dulu datanya setidaknya kerangka htmlnya sudah terbaca dan data bisa di grap baru gulir berikutnya dan seterusnya,
+
+Berikut link maps google reviewnya : https://www.google.com/search?q=klinik+kita2&oq=klinik+kita2&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTISCAEQLhgNGK8BGMcBGIAEGI4FMgkIAhAAGA0YgAQyDAgDEAAYDRiABBi0BzIMCAQQABgNGIAEGLQHMgkIBRAAGA0YgAQyCQgGEAAYDRiABDIJCAcQABgNGIAEMgwICBAAGA0YgAQYtAfSAQgyNjY0ajBqN6gCALACAA&sourceid=chrome&source=chrome.ob&ie=UTF-8#lrd=0x2e69ef91b21b2455:0x1876c0007d3a7a25,1,,,,
+
+dan berikut saya lampirkan data negative.txt dan positive.txt

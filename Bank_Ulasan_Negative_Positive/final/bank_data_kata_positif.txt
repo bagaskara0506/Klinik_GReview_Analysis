@@ -1,0 +1,315 @@
+# ==============================================================================
+# BANK DATA KATA & FRASA POSITIF (INDONESIA + KONTEKS ULASAN KLINIK/LAYANAN)
+# Catatan: Kata penguat/netral seperti "sangat" dan "banyak" hanya digunakan
+# sebagai bagian dari frasa positif agar tidak menghasilkan false positive.
+# ==============================================================================
+
+# --- 1. Frasa dengan Penguat "sangat", "banyak", "paling", "lebih" ---
+sangat membantu
+sangat helpful
+sangat ramah
+sangat baik
+sangat bagus
+sangat bersih
+sangat cepat
+sangat memuaskan
+sangat puas
+sangat nyaman
+sangat profesional
+sangat sabar
+sangat teliti
+sangat informatif
+sangat komunikatif
+sangat responsif
+sangat sigap
+sangat tanggap
+sangat perhatian
+sangat peduli
+sangat sopan
+sangat lembut
+sangat recommended
+sangat rekomended
+sangat rekomen
+sangat terjangkau
+sangat murah
+sangat terpercaya
+banyak membantu
+banyak memberi solusi
+banyak edukasi
+banyak ilmu
+paling bagus
+paling baik
+paling ramah
+paling nyaman
+paling bersih
+paling murah
+paling terjangkau
+lebih baik
+lebih bagus
+lebih cepat
+lebih ramah
+lebih nyaman
+lebih bersih
+lebih murah
+lebih terjangkau
+
+# --- 2. Frasa Layanan & Negasi Positif ("tidak lama", "tidak antri", dll.) ---
+pelayanan baik
+pelayanan bagus
+pelayanan cepat
+pelayanan memuaskan
+pelayanan prima
+pelayanan ramah
+pelayanan terbaik
+pelayanan maksimal
+pelayanan juara
+pelayanan oke
+pelayanan mantap
+tidak antri
+tanpa antri
+tidak lama
+tdk lama
+gak lama
+ga lama
+gk lama
+tidak menunggu lama
+tidak sakit
+tdk sakit
+gak sakit
+ga sakit
+minim rasa sakit
+tidak mengecewakan
+tidak kecewa
+tidak ribet
+gak ribet
+ga ribet
+tidak bertele tele
+tidak mahal
+gak mahal
+ga mahal
+padat dan jelas
+menjelaskan dengan detail
+menjelaskan dengan jelas
+merawat dengan baik
+bekerja dengan baik
+memberi solusi
+penuh perhatian
+murah senyum
+ramah tamah
+lemah lembut
+sopan santun
+siap sedia
+tanggung jawab
+bertanggung jawab
+tepat waktu
+on time
+gerak cepat
+sat set
+satset
+worth it
+ramah di kantong
+
+# --- 3. Keramahan, Empati & Sikap Tenaga Medis / Staf ---
+ramah
+santun
+sopan
+lembut
+sabar
+empati
+peduli
+perhatian
+pendampingan
+hangat
+bersahabat
+tulus
+humble
+rendah hati
+menenangkan
+menyejukkan
+menghargai
+manusiawi
+kooperatif
+supportif
+suportif
+senyum
+antusias
+semangat
+setia
+melayani dengan hati
+
+# --- 4. Kompetensi, Edukasi & Kecepatan Penanganan ---
+helpful
+membantu
+terbantu
+bantu
+bantuan
+edukatif
+informatif
+komunikatif
+detail
+jelas
+paham
+mengerti
+solutif
+solusi
+teliti
+ketelitian
+cermat
+cekatan
+sigap
+tanggap
+cepat tanggap
+responsif
+gercep
+cepat
+gesit
+lancar
+profesional
+kompeten
+berpengalaman
+ahli
+spesialis
+terampil
+telaten
+handal
+andal
+berdedikasi
+konsisten
+terpercaya
+amanah
+jujur
+disiplin
+tertib
+praktis
+efektif
+efisien
+mudah
+gampang
+ringkas
+ringan
+beres
+tuntas
+optimal
+maksimal
+
+# --- 5. Kebersihan, Kenyamanan & Fasilitas Klinik ---
+bersih
+higienis
+steril
+rapi
+rapih
+tertata
+nyaman
+sejuk
+adem
+dingin
+wangi
+harum
+asri
+luas
+lega
+modern
+mewah
+elegan
+apik
+lengkap
+komplit
+memadai
+terawat
+aman
+perlindungan
+tenang
+damai
+kondusif
+
+# --- 6. Hasil Pengobatan, Kepuasan & Rekomendasi ---
+sembuh
+menyembuhkan
+kesembuhan
+pulih
+membaik
+sehat
+selamat
+mengobati
+berhasil
+sukses
+manjur
+mujarab
+mujarrab
+ampuh
+jitu
+cocok
+pas
+sesuai
+puas
+memuaskan
+senang
+menyenangkan
+gembira
+bahagia
+bersyukur
+syukur
+bagus
+baik
+mantap
+mantul
+keren
+kece
+cakep
+top
+juara
+jempol
+jempolan
+istimewa
+luar biasa
+mengagumkan
+kagum
+mengesankan
+membanggakan
+salut
+apresiasi
+unggul
+terbaik
+utama
+prima
+berkualitas
+kualitas
+oke
+okay
+ok
+lumayan
+rekomendasi
+rekomended
+reccomended
+recommended
+rekomen
+langganan
+favorit
+terfavorit
+jamin
+dijamin
+pantas
+maju
+inovatif
+kreatif
+positif
+yakin
+excellent
+great
+good
+awesome
+amazing
+friendly
+clean
+comfortable
+fast
+professional
+
+# --- 7. Biaya & Keterjangkauan ---
+murah
+terjangkau
+ekonomis
+hemat
+gratis
+lunas
+transparan

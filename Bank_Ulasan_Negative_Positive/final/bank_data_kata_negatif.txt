@@ -1,0 +1,473 @@
+# ==============================================================================
+# BANK DATA KATA & FRASA NEGATIF (INDONESIA + KONTEKS ULASAN KLINIK/LAYANAN)
+# Catatan: Kata penguat/netral seperti "sangat", "banyak", "kurang", "terlalu",
+# dan "memutuskan" tidak dimasukkan sebagai kata tunggal agar tidak salah deteksi.
+# ==============================================================================
+
+# --- 1. Frasa dengan Penguat "sangat", "banyak", "terlalu", "kurang" ---
+sangat buruk
+sangat jelek
+sangat kecewa
+sangat mengecewakan
+sangat parah
+sangat lama
+sangat mahal
+sangat kotor
+sangat tidak ramah
+sangat tidak profesional
+sangat tidak memuaskan
+sangat tidak nyaman
+sangat kasar
+sangat ketus
+sangat judes
+sangat jutek
+sangat lambat
+sangat lelet
+sangat berisik
+sangat pengap
+sangat sempit
+banyak membuang waktu
+banyak buang waktu
+banyak alasan
+banyak keluhan
+banyak kekurangan
+banyak masalah
+banyak kendala
+banyak kesalahan
+terlalu lama
+terlalu mahal
+terlalu berbelit
+terlalu kaku
+terlalu cuek
+terlalu kasar
+terlalu cepat selesai
+terlalu terburu buru
+terlalu buru buru
+kurang ramah
+kurang baik
+kurang bagus
+kurang bersih
+kurang cepat
+kurang jelas
+kurang informatif
+kurang detail
+kurang memuaskan
+kurang nyaman
+kurang peduli
+kurang perhatian
+kurang empati
+kurang profesional
+kurang responsif
+kurang tanggap
+kurang sigap
+kurang teliti
+kurang sabar
+kurang sopan
+kurang higienis
+kurang steril
+kurang terawat
+kurang tertib
+kurang lengkap
+kurang memadai
+kurang transparan
+
+# --- 2. Frasa Negasi ("tidak", "tdk", "gak", "ga", "gk", "tak", "enggak") ---
+tidak ramah
+tdk ramah
+gak ramah
+ga ramah
+gk ramah
+tak ramah
+enggak ramah
+tidak sopan
+tdk sopan
+gak sopan
+ga sopan
+tidak sabar
+tdk sabar
+gak sabar
+ga sabar
+tidak empati
+tidak peduli
+tdk peduli
+gak peduli
+ga peduli
+tidak membantu
+tdk membantu
+gak membantu
+ga membantu
+tidak helpful
+tidak menolong
+tidak menjelaskan
+tdk menjelaskan
+gak menjelaskan
+ga menjelaskan
+tidak jelas
+tdk jelas
+gak jelas
+ga jelas
+gk jelas
+tak jelas
+enggak jelas
+tidak informatif
+tidak komunikatif
+tidak responsif
+tdk responsif
+gak responsif
+ga responsif
+tidak tanggap
+tdk tanggap
+gak tanggap
+tidak teliti
+tdk teliti
+gak teliti
+tidak profesional
+tdk profesional
+gak profesional
+ga profesional
+tidak kompeten
+tidak bertanggung jawab
+tak tanggung jawab
+tidak puas
+tdk puas
+gak puas
+ga puas
+tidak memuaskan
+tdk memuaskan
+gak memuaskan
+ga memuaskan
+tidak nyaman
+tdk nyaman
+gak nyaman
+ga nyaman
+gk nyaman
+tidak bersih
+tdk bersih
+gak bersih
+ga bersih
+tidak higienis
+tidak steril
+tidak rapi
+tidak tertib
+tidak terawat
+tidak aman
+tidak layak
+tidak memadai
+tidak sesuai
+gak sesuai
+ga sesuai
+tidak tepat waktu
+tidak on time
+tidak recommended
+tidak rekomended
+tidak rekomen
+gak rekomen
+ga rekomen
+tidak worth it
+gak worth it
+ga worth it
+tidak adil
+tidak jujur
+tidak transparan
+tidak efektif
+tidak efisien
+tidak cocok
+tidak sembuh
+belum sembuh
+tidak membaik
+
+# --- 3. Sikap & Komunikasi Tenaga Medis / Staf / Admin ---
+judes
+jutek
+ketus
+galak
+kasar
+sinis
+judes banget
+jutek banget
+ketus banget
+galak banget
+kasar banget
+cuek
+cuek banget
+acuh
+acuh tak acuh
+tak acuh
+dingin sikapnya
+sombong
+angkuh
+arogan
+belagu
+sok tahu
+sok pintar
+meremehkan
+mengecilkan
+menghakimi
+main hakim
+membentak
+bentak
+ngomel
+mengomel
+marah marah
+jutek parah
+judes parah
+ketus parah
+terburu buru
+buru buru
+asal periksa
+setengah hati
+tidak niat kerja
+malas
+pemalas
+lepas tangan
+tidak peduli pasien
+
+# --- 4. Waktu Tunggu, Antrean & Kecepatan Layanan ---
+lama
+lama banget
+lama sekali
+antri lama
+antrian lama
+antrian panjang
+antrian menumpuk
+ngantri lama
+menunggu lama
+nunggu lama
+pelayanan lama
+lambat
+lamban
+lelet
+lemot
+lelet banget
+lemot banget
+ngaret
+telat
+terlambat
+buang waktu
+membuang waktu
+sia sia
+berbelit
+berbelit belit
+bertele tele
+ribet
+rumit
+persulit
+mempersulit
+menyulitkan
+menyusahkan
+repot
+merepotkan
+mandek
+terhambat
+tertunda
+mendadak batal
+batal sepihak
+
+# --- 5. Kualitas Medis, Kesalahan & Keamanan ---
+salah diagnosa
+salah obat
+salah resep
+salah tindakan
+salah paham
+malpraktik
+ceroboh
+teledor
+lalai
+sembrono
+sembarangan
+asal asalan
+serampangan
+tidak hati hati
+kurang hati hati
+membahayakan
+berbahaya
+fatal
+blunder
+error
+keliru
+kesalahan
+kembali sakit
+tambah sakit
+tambah parah
+memburuk
+alergi obat
+infeksi
+
+# --- 6. Kebersihan, Kenyamanan & Kondisi Fasilitas ---
+kotor
+jorok
+kumuh
+dekil
+berdebu
+bau
+bau pesing
+bau amis
+bau tidak sedap
+pengap
+panas
+gerah
+sumpek
+sempit
+penuh sesak
+desak desakan
+padat merayap
+berantakan
+acak acakan
+semrawut
+carut marut
+kusut
+becek
+bising
+berisik
+gaduh
+gelap
+suram
+buram
+rusak
+mampet
+usang
+ringkih
+terbengkalai
+daerah kotor
+
+# --- 7. Biaya, Harga & Administrasi ---
+mahal
+mahal banget
+mahal sekali
+kemahalan
+overprice
+overpriced
+getok harga
+mencekik
+boros
+rugi
+merugikan
+mubazir
+pungli
+curang
+culas
+licik
+akal akalan
+manipulasi
+tidak jujur
+bohong
+pembohong
+penipu
+tipu
+menipu
+tipu tipu
+palsu
+abal
+abalan
+abal abal
+murahan
+ilegal
+kriminal
+
+# --- 8. Ekspresi Kekecewaan & Emosi Negatif Umum ---
+kecewa
+kecewa banget
+kecewa berat
+asli kecewa
+kekecewaan
+mengecewakan
+menyesal
+nyesel
+kapok
+kapok banget
+trauma
+sakit hati
+sakit ati
+kesal
+kesel
+jengkel
+menjengkelkan
+nyebelin
+menyebalkan
+emosi
+bikin emosi
+bikin kesal
+bikin marah
+marah
+gondok
+bete
+bête
+muak
+ilfeel
+benci
+jijik
+menjijikkan
+risih
+gelisah
+khawatir
+panik
+takut
+menakutkan
+seram
+ngeri
+stres
+stress
+frustasi
+putus asa
+pusing
+bingung
+membingungkan
+bosan
+membosankan
+suntuk
+lelah
+capek
+melelahkan
+tersiksa
+menyiksa
+sengsara
+terlantar
+terabaikan
+tersesat
+terpaksa
+buruk
+jelek
+parah
+parah banget
+pelayanan buruk
+pelayanan jelek
+bobrok
+kacau
+amburadul
+hancur
+ancur
+gagal
+zonk
+sampah
+busuk
+cacat
+bermasalah
+masalah
+komplain
+keluhan
+ngeluh
+mengeluh
+omong kosong
+hanya janji
+php
+pecat
+mohon perbaiki
+perlu diperbaiki
+harus diperbaiki
+waspada
+hindari
+jangan kesini
+jangan ke sini
+bad
+poor
+worst
+useless
+horrible
+terrible
+awful
+disappointed
+disappointing
+rude
+slow
+dirty
+expensive
