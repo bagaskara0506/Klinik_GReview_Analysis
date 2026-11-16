@@ -3,9 +3,15 @@ import random
 import re
 import sys
 import time
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+from dateutil.relativedelta import relativedelta
 import pandas as pd
 from openpyxl.styles import Alignment, Font, PatternFill
 from playwright.sync_api import Error as PlaywrightError, sync_playwright
+
+WIB = ZoneInfo("Asia/Jakarta")
+IS_CI = os.getenv("GITHUB_ACTIONS", "").lower() == "true"
 
 PLACE_FID = "0x2e69ef91b21b2455:0x1876c0007d3a7a25"
 
@@ -30,15 +36,27 @@ RAW_NEG_FILE = os.path.join(BASE_DIR, "Bank_Ulasan_Negative_Positive", "raw", "n
 FINAL_POS_FILE = os.path.join(BASE_DIR, "Bank_Ulasan_Negative_Positive", "final", "bank_data_kata_positif.txt")
 FINAL_NEG_FILE = os.path.join(BASE_DIR, "Bank_Ulasan_Negative_Positive", "final", "bank_data_kata_negatif.txt")
 
-# Kata negasi yang membalikkan polaritas kata berikutnya (dalam jendela 1-2 kata)
+BULAN_ID = {
+    1: "Januari",
+    2: "Februari",
+    3: "Maret",
+    4: "April",
+    5: "Mei",
+    6: "Juni",
+    7: "Juli",
+    8: "Agustus",
+    9: "September",
+    10: "Oktober",
+    11: "November",
+    12: "Desember",
+}
+
 NEGATION_WORDS = {
     "tidak", "tdk", "tak", "bukan", "blm", "belum", "ga", "gak", "gk", "g",
     "enggak", "nggak", "ngga", "kagak", "kurang", "tanpa", "jangan",
     "jgn", "minim", "susah", "sulit", "not", "never", "no",
 }
 
-# Kata penghubung/kronologis/medis yang sering muncul di keluhan panjang dan memicu false-positive
-# jika berdiri sendiri sebagai satu kata, tetapi tetap aktif jika dalam frasa utuh
 CONTEXT_NEUTRAL_SINGLE_WORDS = {
     "sangat", "banget", "sekali", "terlalu", "cukup", "agak",
     "memutuskan", "banyak", "sedikit", "rendah", "tinggi", "besar", "kecil",
@@ -55,7 +73,6 @@ CONTEXT_NEUTRAL_SINGLE_WORDS = {
     "mungkin", "seharusnya",
 }
 
-# Frasa sopan santun/administratif yang bersifat netral agar tidak memicu false-positive pada keluhan
 NEUTRAL_PHRASES = [
     "mohon perhatian",
     "untuk perhatiannya",
@@ -68,7 +85,6 @@ NEUTRAL_PHRASES = [
     "apakah ada keluhan",
 ]
 
-# Frasa & kata positif tambahan untuk konteks ulasan klinik/kesehatan
 EXTRA_POS_PHRASES = [
     "sangat ramah", "sangat membantu", "sangat memuaskan", "sangat informatif",
     "sangat jelas", "sangat detail", "sangat bersih", "sangat nyaman",
@@ -89,7 +105,6 @@ EXTRA_POSITIVE_WORDS = {
     "gentle", "tenang", "disiplin", "rinci", "mendetail",
 }
 
-# Frasa & kata negatif tambahan untuk konteks keluhan klinik/kesehatan
 EXTRA_NEG_PHRASES = [
     "sangat kurang", "kurang sekali", "kurang menyenangkan", "tidak menyenangkan",
     "tdk menyenangkan", "gak menyenangkan", "ga menyenangkan", "kurang asik",
@@ -120,7 +135,6 @@ EXTRA_NEGATIVE_WORDS = {
     "pelit", "singkat", "acuh",
 }
 
-# Pemetaan jumlah bintang Google Review ke bobot skor sentimen
 STAR_SCORE_MAP = {
     5: 4,
     4: 2,
@@ -137,6 +151,59 @@ UI_ARTIFACT_PATTERN = re.compile(
     r"^(?:Report review|Laporkan ulasan|Laporkan|Flag as inappropriate|Tandai sebagai tidak pantas)$",
     re.IGNORECASE,
 )
+
+
+def parse_review_dates(raw_time: str, ref_date: datetime | None = None) -> tuple[str, str, str]:
+    """Mengonversi waktu relatif Google Review menjadi 3 format:
+    1. Waktu_Review_Tanggal : 'DD Bulan YYYY' (misal: '13 November 2026')
+    2. Waktu_Review_Bulan   : 'Bulan YYYY'    (misal: 'November 2026')
+    3. Waktu_Review_Real    : teks asli Google Review (misal: '3 hari lalu')
+    """
+    if ref_date is None:
+        ref_date = datetime.now(WIB).replace(tzinfo=None)
+
+    real_text = (raw_time or "").strip() if isinstance(raw_time, str) else ""
+    if not real_text:
+        return "", "", ""
+
+    text = re.sub(r"^(?:diedit|edited)\s+", "", real_text.lower()).strip()
+
+    if any(
+        k in text
+        for k in (
+            "baru saja", "just now", "detik", "menit", "jam",
+            "hari ini", "today", "second", "minute", "hour",
+        )
+    ):
+        target_dt = ref_date
+    elif text in ("kemarin", "yesterday"):
+        target_dt = ref_date - timedelta(days=1)
+    else:
+        match = re.search(
+            r"^(se|a|an|\d+)\s*(hari|minggu|bulan|tahun|day|days|week|weeks|month|months|year|years)\b",
+            text,
+        )
+        if not match:
+            return real_text, real_text, real_text
+
+        qty_raw = match.group(1)
+        qty = 1 if qty_raw in ("se", "a", "an") else int(qty_raw)
+        unit = match.group(2)
+
+        if unit in ("hari", "day", "days"):
+            target_dt = ref_date - timedelta(days=qty)
+        elif unit in ("minggu", "week", "weeks"):
+            target_dt = ref_date - timedelta(weeks=qty)
+        elif unit in ("bulan", "month", "months"):
+            target_dt = ref_date - relativedelta(months=qty)
+        elif unit in ("tahun", "year", "years"):
+            target_dt = ref_date - relativedelta(years=qty)
+        else:
+            return real_text, real_text, real_text
+
+    bulan_tahun = f"{BULAN_ID[target_dt.month]} {target_dt.year}"
+    tanggal_lengkap = f"{target_dt.day} {bulan_tahun}"
+    return tanggal_lengkap, bulan_tahun, real_text
 
 
 def resolve_latest_lexicon(raw_path: str, final_path: str) -> str:
@@ -209,11 +276,9 @@ def analyze_sentiment(
         clean_text = re.sub(r"\s+", " ", clean_text).strip()
         working_text = clean_text
 
-        # 0. Hapus frasa basa-basi/administratif yang bersifat netral
         for n_phrase in NEUTRAL_PHRASES:
             working_text = re.sub(rf"\b{re.escape(n_phrase)}\b", " ", working_text)
 
-        # 1. Cocokkan frasa negatif terlebih dahulu (termasuk frasa negasi seperti "tidak detail")
         for phrase in neg_phrases:
             pattern = rf"\b{re.escape(phrase)}\b"
             matches = re.findall(pattern, working_text)
@@ -221,7 +286,6 @@ def analyze_sentiment(
                 matched_neg.extend(matches)
                 working_text = re.sub(pattern, " ", working_text)
 
-        # 2. Cocokkan frasa positif
         for phrase in pos_phrases:
             pattern = rf"\b{re.escape(phrase)}\b"
             matches = re.findall(pattern, working_text)
@@ -229,7 +293,6 @@ def analyze_sentiment(
                 matched_pos.extend(matches)
                 working_text = re.sub(pattern, " ", working_text)
 
-        # 3. Cocokkan kata tunggal dengan pemeriksaan jendela negasi 2 kata sebelumnya
         tokens = working_text.split()
         for idx, token in enumerate(tokens):
             if token in CONTEXT_NEUTRAL_SINGLE_WORDS or token in NEGATION_WORDS:
@@ -260,7 +323,6 @@ def analyze_sentiment(
 
     total_score = text_score + star_score
 
-    # Guardrail: rating ekstrem (Bintang 1-2 atau Bintang 4-5) tidak terbalik hanya oleh kata sopan santun
     if rating_int == 1 and text_score <= 1:
         label = "Negatif"
     elif rating_int == 2 and text_score <= 0:
@@ -336,23 +398,35 @@ def try_open_reviews_modal(page) -> bool:
         return False
 
 
-def wait_for_reviews_dialog(page):
-    """Menunggu pop-up ulasan muncul dengan auto-fallback anti-stuck & deteksi reCAPTCHA."""
+def wait_for_reviews_dialog(page, ci_timeout_sec: int = 90):
+    """Menunggu pop-up ulasan muncul dengan auto-fallback anti-stuck & batas waktu mode GitHub Actions."""
     captcha_notified = False
     tried_trigger = False
     fallback_idx = 0
-    last_action_time = time.time()
+    start_wait_time = time.time()
+    last_action_time = start_wait_time
 
     while True:
         if page.is_closed():
             print("\nJendela browser ditutup. Proses scraping dibatalkan.")
             sys.exit(0)
 
+        if IS_CI and (time.time() - start_wait_time) > ci_timeout_sec:
+            raise TimeoutError(
+                f"Pop-up ulasan Google tidak muncul dalam {ci_timeout_sec} detik di runner GitHub Actions "
+                "(kemungkinan terblokir verifikasi/reCAPTCHA dari IP cloud)."
+            )
+
         try:
             is_sorry_page = "google.com/sorry" in page.url
             has_recaptcha = page.locator("iframe[src*='recaptcha']").count() > 0
 
             if is_sorry_page or has_recaptcha:
+                if IS_CI:
+                    raise RuntimeError(
+                        "Google menampilkan halaman verifikasi/reCAPTCHA di runner GitHub Actions. "
+                        "Jalankan scraping secara lokal atau ulangi workflow beberapa saat lagi."
+                    )
                 if not captcha_notified:
                     print(
                         "\n[VERIFIKASI DIBUTUHKAN] Google menampilkan halaman reCAPTCHA ('I'm not a robot').\n"
@@ -472,7 +546,6 @@ def read_card_snapshot(card) -> dict:
             }
 
             function extractZoneText(zone, ownerHeader) {
-                // Lapis 1: Kontainer div.Mjwikb
                 const mjwikbEls = Array.from(card.querySelectorAll("div.Mjwikb"))
                     .filter(el => inZone(el, zone, ownerHeader));
                 if (mjwikbEls.length > 0) {
@@ -482,7 +555,6 @@ def read_card_snapshot(card) -> dict:
                     if (txt) return txt;
                 }
 
-                // Lapis 2: Elemen teks div.d83Iyc langsung
                 const d83Els = Array.from(card.querySelectorAll("div.d83Iyc"))
                     .filter(el => inZone(el, zone, ownerHeader));
                 if (d83Els.length > 0) {
@@ -492,7 +564,6 @@ def read_card_snapshot(card) -> dict:
                     if (txt) return txt;
                 }
 
-                // Lapis 3: Pembungkus ekspansi div.EuXh6e / div.gbdaZe / div.EJ8fFf
                 const expandEls = Array.from(card.querySelectorAll("div.EuXh6e, div.gbdaZe, div.EJ8fFf"))
                     .filter(el => inZone(el, zone, ownerHeader));
                 if (expandEls.length > 0) {
@@ -502,7 +573,6 @@ def read_card_snapshot(card) -> dict:
                     if (txt) return txt;
                 }
 
-                // Lapis 4: Fallback leaf text yang terlihat
                 const excludeSelector = [
                     "a.yC3ZMb", "div.rhtdWc", "div.YE6B9b", "div.h3PQJ",
                     "span.m6Mr5d", "span.M2wKwd", "div.svzjne",
@@ -769,9 +839,32 @@ def expand_and_read_card(card) -> dict:
     return best_data
 
 
-def save_formatted_excel(df: pd.DataFrame, output_path: str):
-    """Menyimpan DataFrame ke Excel dengan wrap text dan lebar kolom yang rapi."""
+def cleanup_old_excel_files(output_path: str):
+    """Menghapus file Excel lama (termasuk file cadangan lama) sebelum menyimpan hasil scraping baru."""
+    output_dir = os.path.dirname(output_path)
+    if not os.path.exists(output_dir):
+        return
+
+    base_prefix = os.path.splitext(os.path.basename(output_path))[0]
+    for fname in os.listdir(output_dir):
+        if fname.startswith(base_prefix) and fname.endswith(".xlsx"):
+            old_file = os.path.join(output_dir, fname)
+            try:
+                os.remove(old_file)
+                print(f"File Excel lama dihapus: '{old_file}'")
+            except PermissionError:
+                print(
+                    f"\n[ERROR] File lama '{old_file}' sedang dibuka di Excel.\n"
+                    f"Tutup file tersebut terlebih dahulu lalu jalankan ulang script."
+                )
+                sys.exit(1)
+
+
+def save_formatted_excel(df: pd.DataFrame, output_path: str) -> str:
+    """Menghapus file Excel lama dan menyimpan hasil scraping terbaru dengan format rapi."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    cleanup_old_excel_files(output_path)
+
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
         df.to_excel(writer, index=False, sheet_name="Google_Reviews")
         ws = writer.sheets["Google_Reviews"]
@@ -784,18 +877,21 @@ def save_formatted_excel(df: pd.DataFrame, output_path: str):
             "B": 24,  # Review_ID
             "C": 24,  # Nama_Reviewer
             "D": 10,  # Bintang
-            "E": 16,  # Waktu_Review
-            "F": 10,  # Badge
-            "G": 65,  # Isi_Ulasan
-            "H": 50,  # Tanggapan_Pemilik
-            "I": 12,  # Sentimen
-            "J": 15,  # Skor_Sentimen
-            "K": 12,  # Skor_Teks
-            "L": 14,  # Skor_Bintang
-            "M": 28,  # Kata_Positif
-            "N": 28,  # Kata_Negatif
-            "O": 24,  # Info_Reviewer
-            "P": 40,  # URL_Profil
+            "E": 22,  # Waktu_Review_Tanggal
+            "F": 20,  # Waktu_Review_Bulan
+            "G": 20,  # Waktu_Review_Real
+            "H": 10,  # Badge
+            "I": 65,  # Isi_Ulasan
+            "J": 50,  # Tanggapan_Pemilik
+            "K": 12,  # Sentimen
+            "L": 15,  # Skor_Sentimen
+            "M": 12,  # Skor_Teks
+            "N": 14,  # Skor_Bintang
+            "O": 28,  # Kata_Positif
+            "P": 28,  # Kata_Negatif
+            "Q": 24,  # Info_Reviewer
+            "R": 40,  # URL_Profil
+            "S": 22,  # Waktu_Scraping
         }
 
         for col_letter, width in column_widths.items():
@@ -811,6 +907,8 @@ def save_formatted_excel(df: pd.DataFrame, output_path: str):
                 cell.alignment = Alignment(vertical="top", wrap_text=True)
 
         ws.freeze_panes = "A2"
+
+    return output_path
 
 
 def scrape_all_google_reviews():
@@ -831,23 +929,31 @@ def scrape_all_google_reviews():
     os.makedirs(PROFILE_DIR, exist_ok=True)
 
     with sync_playwright() as p:
+        launch_args = [
+            "--disable-blink-features=AutomationControlled",
+            "--start-maximized",
+            "--lang=id",
+        ]
+        if IS_CI:
+            launch_args.extend(["--no-sandbox", "--disable-dev-shm-usage"])
+
         launch_kwargs = dict(
             user_data_dir=PROFILE_DIR,
             headless=False,
             no_viewport=True,
             locale="id-ID",
+            timezone_id="Asia/Jakarta",
             extra_http_headers={"Accept-Language": "id-ID,id;q=0.9"},
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--start-maximized",
-                "--lang=id",
-            ],
+            args=launch_args,
         )
 
-        try:
-            context = p.chromium.launch_persistent_context(channel="chrome", **launch_kwargs)
-        except Exception:
+        if IS_CI:
             context = p.chromium.launch_persistent_context(**launch_kwargs)
+        else:
+            try:
+                context = p.chromium.launch_persistent_context(channel="chrome", **launch_kwargs)
+            except Exception:
+                context = p.chromium.launch_persistent_context(**launch_kwargs)
 
         context.add_init_script(
             "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
@@ -856,7 +962,7 @@ def scrape_all_google_reviews():
         page = context.pages[0] if context.pages else context.new_page()
         page.set_default_timeout(60000)
 
-        print("Membuka halaman Google Review Klinik Kita (Bahasa Indonesia)...")
+        print("Membuka halaman Google Review Klinik Kita (Bahasa Indonesia - WIB)...")
         page.goto(TARGET_URL, wait_until="domcontentloaded")
 
         dialog = wait_for_reviews_dialog(page)
@@ -912,6 +1018,8 @@ def scrape_all_google_reviews():
 
         results = []
         seen_ids = set()
+        scrape_timestamp = datetime.now(WIB).replace(tzinfo=None)
+        scrape_timestamp_str = scrape_timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
         for i in range(total_cards):
             card = cards.nth(i)
@@ -924,6 +1032,9 @@ def scrape_all_google_reviews():
 
             review_text = item["review_text"]
             rating = item["rating"]
+            review_tanggal, review_bulan, review_real = parse_review_dates(
+                item["review_time"], scrape_timestamp
+            )
 
             (
                 sentiment_label,
@@ -942,7 +1053,9 @@ def scrape_all_google_reviews():
                     "Review_ID": review_id,
                     "Nama_Reviewer": item["reviewer_name"],
                     "Bintang": rating,
-                    "Waktu_Review": item["review_time"],
+                    "Waktu_Review_Tanggal": review_tanggal,
+                    "Waktu_Review_Bulan": review_bulan,
+                    "Waktu_Review_Real": review_real,
                     "Badge": item["badge"],
                     "Isi_Ulasan": review_text,
                     "Tanggapan_Pemilik": item["owner_response"],
@@ -954,6 +1067,7 @@ def scrape_all_google_reviews():
                     "Kata_Negatif": neg_found,
                     "Info_Reviewer": item["reviewer_stats"],
                     "URL_Profil": item["profile_url"],
+                    "Waktu_Scraping": scrape_timestamp_str,
                 }
             )
 
@@ -962,8 +1076,11 @@ def scrape_all_google_reviews():
 
         context.close()
 
-        save_formatted_excel(pd.DataFrame(results), OUTPUT_FILE)
-        print(f"Selesai! {len(results)} ulasan lengkap berhasil disimpan ke '{OUTPUT_FILE}'.")
+        saved_path = save_formatted_excel(pd.DataFrame(results), OUTPUT_FILE)
+        print(
+            f"Selesai! {len(results)} ulasan lengkap (waktu penarikan: {scrape_timestamp_str} WIB) "
+            f"berhasil disimpan ke '{saved_path}'."
+        )
 
 
 if __name__ == "__main__":
