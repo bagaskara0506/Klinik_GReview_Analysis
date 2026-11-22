@@ -5,11 +5,11 @@ on:
     # Jadwal otomatis setiap hari pukul 15:30 UTC = 22:30 WIB
     - cron: "30 15 * * *"
   workflow_dispatch:
-    # Mengizinkan eksekusi manual dari tab Actions (bisa pilih branch devel/main)
+    # Mengizinkan eksekusi manual dari tab Actions GitHub
 
 jobs:
   scrape-and-upload:
-    # Memastikan proses otomasi hanya berjalan dari branch main (production)
+    # Memastikan proses otomasi hanya berjalan di branch main (production)
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
@@ -34,10 +34,14 @@ jobs:
         env:
           GMAPS_URL: ${{ secrets.GMAPS_URL }}
         run: |
-          python scrape_review.py
+          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" python src/scrape_klinik_kita.py
 
       - name: Upload & Sync to Neon PostgreSQL
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          python upload_database.py
+          if [ -f "src/upload_database.py" ]; then
+            python src/upload_database.py
+          else
+            python upload_database.py
+          fi
