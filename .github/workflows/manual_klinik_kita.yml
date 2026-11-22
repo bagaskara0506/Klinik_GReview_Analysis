@@ -2,7 +2,7 @@ name: Scrape Google Review Klinik Kita
 
 on:
   schedule:
-# sadadasd
+    # sadadasd
     # Jadwal otomatis setiap hari pukul 15:30 UTC = 22:30 WIB
     - cron: "30 15 * * *"
   workflow_dispatch:
@@ -35,7 +35,7 @@ jobs:
         env:
           GMAPS_URL: ${{ secrets.GMAPS_URL }}
         run: |
-          python scrape_klinik_kita.py
+          python src/scrape_klinik_kita.py
 
       - name: Upload & Sync to Neon PostgreSQL
         env:
