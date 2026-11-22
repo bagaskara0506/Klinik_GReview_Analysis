@@ -41,4 +41,4 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          python upload_database.py
+          python src/upload_database.py
