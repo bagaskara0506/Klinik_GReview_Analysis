@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 from datetime import datetime
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
@@ -12,7 +13,6 @@ except ImportError:
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INPUT_FILE = os.path.join(BASE_DIR, "raw_data", "hasil_review_klinik_kita.xlsx")
-ENV_FILE = os.path.join(BASE_DIR, ".env")
 
 BULAN_MAP = {
     "Januari": "Jan", "Februari": "Feb", "Maret": "Mar", "April": "Apr",
@@ -21,21 +21,53 @@ BULAN_MAP = {
 }
 
 
+def resolve_local_env() -> tuple[str, str]:
+    """Menentukan file .env lokal (.env.main atau .env.devel) sesuai branch Git aktif."""
+    if os.getenv("GITHUB_ACTIONS", "").lower() == "true":
+        return "", "github-actions"
+
+    try:
+        branch = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=BASE_DIR,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except Exception:
+        branch = "devel"
+
+    target_name = ".env.main" if branch == "main" else ".env.devel"
+    target_path = os.path.join(BASE_DIR, target_name)
+
+    if os.path.exists(target_path):
+        return target_path, branch
+
+    # Fallback ke file .env standar jika .env.main / .env.devel belum dibuat
+    return os.path.join(BASE_DIR, ".env"), branch
+
+
 def load_database_url() -> str:
-    """Membaca DATABASE_URL dari file .env di folder root project."""
-    if load_dotenv is not None and os.path.exists(ENV_FILE):
-        load_dotenv(ENV_FILE, override=True)
-    elif os.path.exists(ENV_FILE):
-        with open(ENV_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                k, v = line.split("=", 1)
-                k = k.strip()
-                v = v.strip().strip('"').strip("'")
-                if k:
-                    os.environ[k] = v
+    """Membaca DATABASE_URL sesuai environment (lokal per branch vs GitHub Actions)."""
+    is_ci = os.getenv("GITHUB_ACTIONS", "").lower() == "true"
+    env_file, active_branch = resolve_local_env()
+
+    if is_ci:
+        print("[INFO] Berjalan di GitHub Actions -> membaca DATABASE_URL dari Environment Secrets.")
+    else:
+        print(f"[INFO] Branch Git aktif: '{active_branch}' -> memuat '{os.path.basename(env_file)}'")
+        if load_dotenv is not None and os.path.exists(env_file):
+            load_dotenv(env_file, override=True)
+        elif os.path.exists(env_file):
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    k, v = line.split("=", 1)
+                    k = k.strip()
+                    v = v.strip().strip('"').strip("'")
+                    if k:
+                        os.environ[k] = v
 
     raw_url = (
         os.environ.get("DATABASE_URL")
@@ -44,11 +76,17 @@ def load_database_url() -> str:
     ).strip()
 
     if not raw_url:
-        print(
-            "[ERROR] DATABASE_URL tidak ditemukan di file .env.\n"
-            f"Pastikan file '{ENV_FILE}' berisi:\n"
-            "DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require"
-        )
+        if is_ci:
+            print(
+                "[ERROR] DATABASE_URL tidak ditemukan di GitHub Environment Secrets.\n"
+                "Pastikan Environment 'production' atau 'devel' di Settings -> Environments sudah memiliki secret DATABASE_URL."
+            )
+        else:
+            print(
+                f"[ERROR] DATABASE_URL tidak ditemukan di '{env_file}'.\n"
+                f"Pastikan file '{os.path.basename(env_file)}' berisi:\n"
+                "DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require"
+            )
         sys.exit(1)
 
     if raw_url.startswith("postgres://"):

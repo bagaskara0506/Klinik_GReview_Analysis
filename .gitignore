@@ -1,3 +1,5 @@
 venv/
+.env.devel
+.env.main
 .env
 browser_profile/
