@@ -1,3 +1,7 @@
 venv/
+.env.devel
+.env.main
 .env
 browser_profile/
+__pycache__/
+*.py[cod]
