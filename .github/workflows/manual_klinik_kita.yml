@@ -35,7 +35,7 @@ jobs:
         env:
           GMAPS_URL: ${{ secrets.GMAPS_URL }}
         run: |
-          python scrape_review.py
+          python scrape_klinik_kita.py
 
       - name: Upload & Sync to Neon PostgreSQL
         env:
