@@ -2,15 +2,16 @@ name: Scrape Google Review Klinik Kita
 
 on:
   schedule:
-    # Jadwal otomatis setiap hari pukul 15:30 UTC = 22:30 WIB (otomatis jalan di branch main)
+    # Jadwal otomatis setiap hari pukul 15:30 UTC = 22:30 WIB
     - cron: "30 15 * * *"
   workflow_dispatch:
-    # Mengizinkan eksekusi manual dari tab Actions (bisa pilih branch main atau devel)
+
+permissions:
+  contents: write
 
 jobs:
   scrape-and-upload:
     runs-on: ubuntu-latest
-    # Otomatis memilih Environment 'production' jika di main, atau 'devel' jika di branch lain
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'devel' }}
 
     steps:
@@ -42,4 +43,17 @@ jobs:
             python src/upload_database.py
           else
             python upload_database.py
+          fi
+
+      - name: Commit & Push Updated Excel
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add raw_data/hasil_review_klinik_kita.xlsx
+          if git diff --staged --quiet; then
+            echo "Tidak ada perubahan pada file Excel."
+          else
+            WIB_TIME=$(TZ='Asia/Jakarta' date '+%Y-%m-%d %H:%M WIB')
+            git commit -m "chore: manual update ulasan Klinik Kita (${WIB_TIME})"
+            git push
           fi
